@@ -1,7 +1,7 @@
 use std::rc::Rc;
-use vdom::node::Node;
+use super::node::Node;
 
-pub type Callback<T> = Rc<Fn( T )>;
+pub type Callback<T> = Rc<Fn(T)>;
 
 pub trait Component<Msg: 'static>: Sized + 'static {
     fn view(&self) -> Node<Msg>;

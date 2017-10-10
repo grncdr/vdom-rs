@@ -1,7 +1,5 @@
 //! Strongly-typed abstractions for element attributes.
 
-use std::fmt::Debug;
-use stdweb::unstable::TryInto;
 use stdweb::web::Element;
 use stdweb::Value;
 
@@ -11,7 +9,10 @@ pub trait Attribute {
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-enum AttrKind { Attribute, Property }
+enum AttrKind {
+    Attribute,
+    Property,
+}
 
 #[derive(Debug, PartialEq)]
 pub struct Attr {
@@ -22,11 +23,19 @@ pub struct Attr {
 
 impl Attr {
     pub fn property<T: Into<Value>>(key: &'static str, v: T) -> Self {
-        Attr { kind: AttrKind::Property, key: key, value: v.into() }
+        Attr {
+            kind: AttrKind::Property,
+            key: key,
+            value: v.into(),
+        }
     }
 
     pub fn attribute<T: Into<Value>>(key: &'static str, v: T) -> Self {
-        Attr { kind: AttrKind::Attribute, key: key, value: v.into() }
+        Attr {
+            kind: AttrKind::Attribute,
+            key: key,
+            value: v.into(),
+        }
     }
 
     pub fn set(&self, element: &Element) {

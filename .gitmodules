@@ -1,0 +1,3 @@
+[submodule "vendor/stdweb"]
+	path = vendor/stdweb
+	url = https://github.com/grncdr/stdweb

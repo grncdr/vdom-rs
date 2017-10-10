@@ -6,11 +6,11 @@ use std::iter::FromIterator;
 use stdweb::web::{Element, EventListenerHandle};
 use stdweb::web::event::ConcreteEvent;
 
-use vdom::attribute::Attr;
-use vdom::events::{VListener, ConcreteVListener};
+use super::attribute::Attr;
+use super::events::{VListener, ConcreteVListener};
 
 /// shit's complicated (TODO - document how this ended up being the way)
-pub type ListenerInstaller<Msg> = FnBox( &Element, Rc<Fn(Msg)> ) -> EventListenerHandle;
+pub type ListenerInstaller<Msg> = FnBox(&Element, Rc<Fn(Msg)>) -> EventListenerHandle;
 
 
 pub struct Node<Msg: 'static> {
@@ -31,8 +31,9 @@ impl<Msg> Node<Msg> {
     }
 
     pub fn wrap_in<T, I>(tag: &'static str, things: I) -> Self
-    where T: Into<Node<Msg>>
-        , I: IntoIterator<Item=T>
+    where
+        T: Into<Node<Msg>>,
+        I: IntoIterator<Item = T>,
     {
         Node {
             tag: tag,
@@ -42,11 +43,14 @@ impl<Msg> Node<Msg> {
         }
     }
 
-    pub fn add_event_listener< T, F >( &mut self, listener: F )
-    where T: ConcreteEvent + 'static
-        , F: (Fn( T ) -> Msg) + 'static
+    pub fn add_event_listener<T, F>(&mut self, listener: F)
+    where
+        T: ConcreteEvent + 'static,
+        F: Fn(T) -> Msg + 'static,
     {
-        self.listeners.push(Box::new(ConcreteVListener::new(listener)));
+        self.listeners.push(
+            Box::new(ConcreteVListener::new(listener)),
+        );
     }
 
     pub fn append_child(&mut self, node: Self) {
@@ -64,14 +68,19 @@ impl<Msg> Node<Msg> {
 
 pub enum Child<Msg: 'static> {
     Text(String),
-    Node(Node<Msg>)
+    Node(Node<Msg>),
 }
 
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 
 impl<M> Debug for Node<M> {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
-        write!(f, "Node{{ tag: {:?}, children: {:?} }}", self.tag, self.children)
+        write!(
+            f,
+            "Node{{ tag: {:?}, children: {:?} }}",
+            self.tag,
+            self.children
+        )
     }
 }
 
@@ -79,13 +88,13 @@ impl<M> Debug for Child<M> {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
             Child::Text(ref text) => write!(f, "{:?}", text),
-            Child::Node(ref node) => write!(f, "{:?}", node)
+            Child::Node(ref node) => write!(f, "{:?}", node),
         }
     }
 }
 
 impl<M> FromIterator<Node<M>> for Node<M> {
-    fn from_iter<T: IntoIterator<Item=Node<M>>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = Node<M>>>(iter: T) -> Self {
         Node {
             tag: "div",
             attributes: HashMap::new(),
@@ -102,7 +111,8 @@ impl<M> From<Node<M>> for Child<M> {
 }
 
 impl<M, T> From<T> for Child<M>
-where T: Into<String>
+where
+    T: Into<String>,
 {
     fn from(text: T) -> Self {
         Child::Text(text.into())

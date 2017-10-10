@@ -27,7 +27,7 @@ macro_rules! vdom {
     };
 
     ($tag:ident) => {{
-        use vdom::Node;
+        use super::Node;
         Node::new(stringify!($tag))
     }};
 
@@ -109,7 +109,7 @@ macro_rules! vdom {
 
 
 /// Generates a public newtype wrapper for an HTML attribute and an
-/// implementation of vdom::Attribute.
+/// implementation of super::Attribute.
 ///
 /// Example:
 ///
@@ -122,7 +122,7 @@ macro_rules! attr {
     ($rust_name:ident, $attr_fn:ident, $html_name:ident) => {
         /// Instantiate an `Attr` that will set the DOM elements `$html_name` $attr_fn.
         pub fn $rust_name<T: Into<::stdweb::Value>>(val: T) -> Attr {
-            ::vdom::attribute::Attr::$attr_fn(stringify!($html_name), val)
+            super::attribute::Attr::$attr_fn(stringify!($html_name), val)
         }
     }
 }

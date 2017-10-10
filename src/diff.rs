@@ -1,149 +1,154 @@
 use std::fmt::Debug;
-use vdom::{Node, Attr, Child};
+use super::{Node, Attr, Child};
 
 #[derive(Debug)]
 pub enum Operation<'node, Msg: 'static + Debug> {
     ReplaceNode(&'node Node<Msg>),
     ReplaceText(&'node str),
-	RemoveAttribute(&'node Attr),
-	SetAttribute(&'node Attr),
+    RemoveAttribute(&'node Attr),
+    SetAttribute(&'node Attr),
     RemoveLast(i32),
-	Append(&'node [ Child<Msg> ]),
+    Append(&'node [Child<Msg>]),
     Insert(i32, &'node Node<Msg>),
 }
 
 impl<'a, M: 'static + Debug> Operation<'a, M> {
-	fn at(self, index: &i32) -> Patch<'a, i32, M> {
-		Patch{ node: *index, operation: self }
-	}
+    fn at(self, index: &i32) -> Patch<'a, i32, M> {
+        Patch {
+            node: *index,
+            operation: self,
+        }
+    }
 }
 
 #[derive(Debug)]
 pub struct Patch<'node, K, M: 'static + Debug> {
-	pub node: K,
-	pub operation: Operation<'node, M>
+    pub node: K,
+    pub operation: Operation<'node, M>,
 }
 
 // transform the key type of this patch, used to associate patches with dom nodes
 impl<'node, K, M: 'static + Debug> Patch<'node, K, M> {
-	pub fn at<K2>(self, node: K2) -> Patch<'node, K2, M> {
-		Patch{ node: node, operation: self.operation }
-	}
+    pub fn at<K2>(self, node: K2) -> Patch<'node, K2, M> {
+        Patch {
+            node: node,
+            operation: self.operation,
+        }
+    }
 }
 
-pub fn diff<'root, M: 'static + Debug>(old: &'root Node<M>, new: &'root Node<M>) -> Vec<Patch<'root, i32, M>> {
+pub fn diff<'root, M: 'static + Debug>(
+    old: &'root Node<M>,
+    new: &'root Node<M>,
+) -> Vec<Patch<'root, i32, M>> {
     let mut patches: Vec<Patch<'root, i32, M>> = Vec::with_capacity(32);
-	let mut index = 0i32;
+    let mut index = 0i32;
     diff_node(old, new, &mut patches, &mut index);
-	patches
+    patches
 }
 
 fn diff_node<'root, 'node: 'root, M: 'static + Debug>(
-	old: &'node Node<M>,
-	new: &'node Node<M>,
-	patches: &mut Vec<Patch<'root, i32, M>>,
-	index: &mut i32
+    old: &'node Node<M>,
+    new: &'node Node<M>,
+    patches: &mut Vec<Patch<'root, i32, M>>,
+    index: &mut i32,
 ) {
     use self::Operation::*;
 
-	/* todo - investigate whether it's worth deriving PartialEq for Node
+    /* todo - investigate whether it's worth deriving PartialEq for Node
 	if (old == new) {
 		return;
 	}
 	*/
 
-	// Bail if you run into different types of nodes. Implies that the
-	// structure has changed significantly and it's not worth a diff.
-	if new.tag != old.tag {
-		patches.push(ReplaceNode(new).at(index));
-		return;
-	}
+    // Bail if you run into different types of nodes. Implies that the
+    // structure has changed significantly and it's not worth a diff.
+    if new.tag != old.tag {
+        patches.push(ReplaceNode(new).at(index));
+        return;
+    }
 
-	diff_attributes(old, new, patches, index);
-	diff_children(old, new, patches, index);
+    diff_attributes(old, new, patches, index);
+    diff_children(old, new, patches, index);
 }
 
 fn diff_attributes<'root, 'node: 'root, M: 'static + Debug>(
-	old: &'node Node<M>,
-	new: &'node Node<M>,
-	patches: &mut Vec<Patch<'root, i32, M>>,
-	index: &i32
+    old: &'node Node<M>,
+    new: &'node Node<M>,
+    patches: &mut Vec<Patch<'root, i32, M>>,
+    index: &i32,
 ) {
-	use std::collections::HashSet;
-	use self::Operation::*;
-	let keys: HashSet<_> = old.attributes.keys().chain(new.attributes.keys()).collect();
-	for key in keys.into_iter() {
-		if !new.attributes.contains_key(key) {
-			patches.push(RemoveAttribute(old.attributes.get(key).unwrap()).at(index));
-		} else if !old.attributes.contains_key(key) {
-			patches.push(SetAttribute(new.attributes.get(key).unwrap()).at(index));
-		} else {
-			let new_attr = new.attributes.get(key);
-			if old.attributes.get(key) != new_attr {
-				patches.push(SetAttribute(new_attr.unwrap()).at(index));
-			}
-		}
-	}
+    use std::collections::HashSet;
+    use self::Operation::*;
+    let keys: HashSet<_> = old.attributes.keys().chain(new.attributes.keys()).collect();
+    for key in keys.into_iter() {
+        if !new.attributes.contains_key(key) {
+            patches.push(RemoveAttribute(old.attributes.get(key).unwrap()).at(index));
+        } else if !old.attributes.contains_key(key) {
+            patches.push(SetAttribute(new.attributes.get(key).unwrap()).at(index));
+        } else {
+            let new_attr = new.attributes.get(key);
+            if old.attributes.get(key) != new_attr {
+                patches.push(SetAttribute(new_attr.unwrap()).at(index));
+            }
+        }
+    }
 }
 
 fn diff_children<'root, 'node: 'root, M: 'static + Debug>(
-	old_parent: &'node Node<M>,
-	new_parent: &'node Node<M>,
-	patches: &mut Vec<Patch<'root, i32, M>>,
-	index: &mut i32
+    old_parent: &'node Node<M>,
+    new_parent: &'node Node<M>,
+    patches: &mut Vec<Patch<'root, i32, M>>,
+    index: &mut i32,
 ) {
-	use self::Operation::*;
-	let old_len = old_parent.children.len();
-	let new_len = new_parent.children.len();
+    use self::Operation::*;
+    let old_len = old_parent.children.len();
+    let new_len = new_parent.children.len();
 
-	// Figure out if there are inserts or removals
+    // Figure out if there are inserts or removals
 
-	if old_len > new_len {
-		patches.push(RemoveLast((old_len - new_len) as i32).at(index));
-	} else if old_len < new_len {
-		patches.push(Append(&new_parent.children[old_len..]).at(index));
-	}
+    if old_len > new_len {
+        patches.push(RemoveLast((old_len - new_len) as i32).at(index));
+    } else if old_len < new_len {
+        patches.push(Append(&new_parent.children[old_len..]).at(index));
+    }
 
-	// Pairwise diff everything else
-	let old_children = &old_parent.children;
-	let new_children = &new_parent.children;
+    // Pairwise diff everything else
+    let pairs = old_parent.children.iter().zip(new_parent.children.iter());
 
-	let pairs = old_parent.children.iter().zip(new_parent.children.iter());
+    for (old_child, new_child) in pairs {
+        *index += 1;
+        match (old_child, new_child) {
+            (&Child::Node(ref old_node), &Child::Node(ref new_node)) => {
+                diff_node(old_node, new_node, patches, index);
+            }
+            (&Child::Text(ref old_text), &Child::Text(ref new_text)) => {
+                if old_text != new_text {
+                    patches.push(ReplaceText(new_text.as_str()).at(index))
+                }
+            }
+            (_, &Child::Text(ref new_text)) => {
+                patches.push(ReplaceText(new_text.as_str()).at(index))
+            }
+            (_, &Child::Node(ref new_node)) => patches.push(ReplaceNode(new_node).at(index)),
+        }
+    }
 
-	for (old_child, new_child) in pairs {
-		*index += 1;
-		match (old_child, new_child) {
-			(&Child::Node(ref old_node), &Child::Node(ref new_node)) => {
-				diff_node(old_node, new_node, patches, index);
-			}
-			(&Child::Text(ref old_text), &Child::Text(ref new_text)) => {
-				if old_text != new_text {
-					patches.push(ReplaceText(new_text.as_str()).at(index))
-				}
-			}
-			(_, &Child::Text(ref new_text)) => {
-				patches.push(ReplaceText(new_text.as_str()).at(index))
-			}
-			(_, &Child::Node(ref new_node)) => {
-				patches.push(ReplaceNode(new_node).at(index))
-			}
-		}
-	}
-
-	if old_len > new_len {
-		// advance the node counter to compensate for the nodes we are removing from the dom.
-		// this is needed to keep node indexes in sync with those generated in apply.
-		*index += count_children(&old_parent.children[new_len..]);
-	}
+    if old_len > new_len {
+        // advance the node counter to compensate for the nodes we are removing from the dom.
+        // this is needed to keep node indexes in sync with those generated in apply.
+        *index += count_children(&old_parent.children[new_len..]);
+    }
 }
 
 fn count_children<M>(children: &[Child<M>]) -> i32 {
-	children.iter().fold(0, |count, child| {
-		count + 1 + match child {
-			&Child::Text(_) => 0,
-			&Child::Node(ref node) => count_children(&node.children[..]),
-		}
-	})
+    children.iter().fold(0, |count, child| {
+        count + 1 +
+            match child {
+                &Child::Text(_) => 0,
+                &Child::Node(ref node) => count_children(&node.children[..]),
+            }
+    })
 }
 
 ////////////  KEYED DIFF  ////////////

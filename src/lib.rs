@@ -1,17 +1,20 @@
+#![feature(fnbox)]
+
+#[macro_use]
+extern crate stdweb;
+
 #[macro_use]
 mod macros;
 
 mod node;
 mod component;
-//mod render;
 mod events;
 mod diff;
+mod dom_iterator;
 mod apply;
 mod root;
 
 pub mod attribute;
-
-pub mod example;
 
 pub use self::node::*;
 pub use self::component::*;
