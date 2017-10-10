@@ -14,6 +14,9 @@ mod dom_iterator;
 mod apply;
 mod root;
 
+#[cfg(test)]
+mod diff_tests;
+
 pub mod attribute;
 
 pub use self::node::*;

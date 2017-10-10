@@ -13,7 +13,7 @@ pub enum Operation<'node, Msg: 'static + Debug> {
 }
 
 impl<'a, M: 'static + Debug> Operation<'a, M> {
-    fn at(self, index: &i32) -> Patch<'a, i32, M> {
+    pub fn at(self, index: &i32) -> Patch<'a, i32, M> {
         Patch {
             node: *index,
             operation: self,
