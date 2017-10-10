@@ -71,7 +71,39 @@ pub enum Child<Msg: 'static> {
     Node(Node<Msg>),
 }
 
+impl<M> PartialEq for Child<M> {
+    fn eq(&self, other: &Self) -> bool {
+        use self::Child::*;
+
+        match (self, other) {
+            (&Text(ref s_string), &Text(ref o_string)) => s_string == o_string,
+            (&Node(ref s_node), &Node(ref o_node)) => s_node == o_node,
+            _ => false
+        }
+    }
+}
+
 use std::fmt::{Debug, Formatter, Result as FmtResult};
+
+impl<M> PartialEq for Node<M> {
+    fn eq(&self, other: &Self) -> bool {
+        self.tag == other.tag &&
+        self.attributes == other.attributes &&
+        self.children.len() == other.children.len() &&
+        {
+            for (self_child, other_child) in self.children.iter().zip(other.children.iter()) {
+                if self_child != other_child {
+                    return false;
+                }
+            }
+            true
+        }
+    }
+
+    fn ne(&self, other: &Self) -> bool {
+        !self.eq(other)
+    }
+}
 
 impl<M> Debug for Node<M> {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {

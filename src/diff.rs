@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use super::{Node, Attr, Child};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Operation<'node, Msg: 'static + Debug> {
     ReplaceNode(&'node Node<Msg>),
     ReplaceText(&'node str),
@@ -21,7 +21,7 @@ impl<'a, M: 'static + Debug> Operation<'a, M> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Patch<'node, K, M: 'static + Debug> {
     pub node: K,
     pub operation: Operation<'node, M>,
