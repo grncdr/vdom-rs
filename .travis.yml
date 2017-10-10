@@ -1,0 +1,17 @@
+language: rust
+
+dist: trusty
+sudo: false
+
+rust:
+  - nightly
+
+# matrix:
+#   allow_failures:
+#     - rust: stable
+#     - rust: nightly
+
+script:
+  - rustup target add asmjs-unknown-emscripten
+  - cargo install cargo-web
+  - cargo web test --nodejs
