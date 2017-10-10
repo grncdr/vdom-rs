@@ -1,0 +1,8 @@
+[package]
+name = "vdom"
+version = "0.1.0"
+authors = ["Stephen Sugden <me@stephensugden.com>"]
+
+[dependencies]
+#lazy_static = "*"
+stdweb = { path = "./vendor/stdweb" }
