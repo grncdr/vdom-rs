@@ -27,7 +27,7 @@ macro_rules! vdom {
     };
 
     ($tag:ident) => {{
-        use super::Node;
+        use vdom::Node;
         Node::new(stringify!($tag))
     }};
 

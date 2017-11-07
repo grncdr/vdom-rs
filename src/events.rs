@@ -49,7 +49,7 @@ where
     Msg: 'static,
 {
     fn key(&self) -> &'static str {
-        Evt::static_event_type()
+        Evt::EVENT_TYPE
     }
 
     fn install(&self, element: &Element, update: Rc<Fn(Msg)>) {
